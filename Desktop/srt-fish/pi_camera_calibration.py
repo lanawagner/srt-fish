@@ -3,9 +3,13 @@ import numpy as np
 import os
 import glob
 
-CHECKERBOARD = (6,9)
+#CAMERA CALIBRATION FOR RASPBERRY PI CAMERA v2
+
+#setting criteria
+CHECKERBOARD = (6,9) #6 x 9 inner corners
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
+#array for object points
 objpoints = []
 imgpoints = []
 
@@ -13,6 +17,7 @@ objp = np.zeros((1, CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
 objp[0,:,:2]=np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1,2)
 prev_img_shape=None
 
+#looping through calibration images
 directory = ('/home/pi/Desktop/calibimages/')
 for filename in os.listdir(directory): #return filename + size
     
@@ -20,10 +25,13 @@ for filename in os.listdir(directory): #return filename + size
     pathname= os.path.join(directory, filename)
     img=cv2.imread(pathname)
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
- #   print(pathname)
+    #print(pathname)
     
+    #finding corners
     ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
-#     print(pathname, ret)    
+    #print(pathname, ret)
+    
+    #refining and drawing corners
     if ret == True:
         objpoints.append(objp)
         
@@ -34,30 +42,15 @@ for filename in os.listdir(directory): #return filename + size
         #cv2.imshow(pathname, img)
         #cv2.waitKey(0)
     elif ret == False:
-        print(pathname, "something's wrong")
+        print(pathname, "Checkerboard not found")
 
 #cv2.destroyAllWindows()
 #h,w = img.shape[:2]
 
+
+#saving the calibration matrix to a .yml file
 ret, mtx, dist,rvecs,tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-# print("Camera matrix: \n")
-# print(mtx)
-# print("dist : \n")
-# print(dist)
-# print("rvecs : \n")
-# print(rvecs)
-# print("tvecs : \n")
-# print(tvecs)
-
-img=cv2.imread('test7.jpg')
-#h,w = testim.shape[:2]
-
-h,w = img.shape[:2]
-newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
-
-mapx,mapy=cv2.initUndistortRectifyMap(mtx,dist,None,newcameramtx,(w,h),5)
-dst = cv2.remap(img,mapx,mapy,cv2.INTER_LINEAR)
-
-x,y,w,h = roi
-dst = dst[y:y+h, x:x+w]
-cv2.imwrite('calibtestresult.png',dst)
+cv_file = cv2.FileStorage('/home/pi/Desktop/srt-fish/picalibmatrix.yml', cv2.FILE_STORAGE_WRITE)
+cv_file.write("K", mtx)
+cv_file.write("D", dist)
+cv_file.release()
