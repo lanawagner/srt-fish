@@ -38,9 +38,10 @@ prev_img_shape=None
 while True:
     #img = frame.array
     frame = vs.read()
-    frame = imutils.resize(frame, width=640)
     
     gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    
+    #print(gray.shape)
 
 #     #finding corners
     ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
@@ -49,33 +50,48 @@ while True:
 #     
 #     #refining and drawing corners
     if ret == True:
+        print("c found")
         objpoints.append(objp)
         
         corners2 = cv2.cornerSubPix(gray, corners, (11,11), (-1, -1), criteria)
         imgpoints.append(corners2)
 #         
-        frame = cv2.drawChessboardCorners(frame , CHECKERBOARD, corners2, ret)
+        #frame = cv2.drawChessboardCorners(frame , CHECKERBOARD, corners2, ret)
     
     #cv2.imshow("Frame", img)
     cv2.imshow("Frame", frame)
-    key= cv2.waitKey(1) & 0xFF
+    key= cv2.waitKey(5)# & 0xFF
     
-    if key == ord("q"):
+    if key == 27: #esc key #ord("q"):
+        print("esc key pressed")
         break
     
     fps.update()
 
-print("VIDEO FEED STOPPED")
-cv2.destroyAllWindows()
-vs.stop()
+#saving the calibration matrix to a .yml file
+#print("OP", objpoints)
+#print("IP",imgpoints)
+ret, mtx, dist,rvecs,tvecs = cv2.calibrateCamera(objpoints, imgpoints, (320,240), None, None)
+print("K", mtx)
+print("D", dist)
+
+
+# print("writing to file")
+# cv_file = cv2.FileStorage('/home/pi/Desktop/srt-fish/picalibvideomatrix.yml', cv2.FILE_STORAGE_WRITE)
+# cv_file.write("K", mtx)
+# cv_file.write("D", dist)
+# cv_file.release()
+
+#K: [[177.03120335   0.         166.73836584][  0.         176.26172836 126.89791006][  0.           0.           1.        ]]
+#D: [[ 0.51413493 -1.50449121 -0.00173984  0.02121675  1.35833619]]
+
 #h,w = img.shape[:2]
 
 
-#saving the calibration matrix to a .yml file
-ret, mtx, dist,rvecs,tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-print("K", mtx)
-print("D", dist)
-cv_file = cv2.FileStorage('/home/pi/Desktop/srt-fish/picalibmatrix.yml', cv2.FILE_STORAGE_WRITE)
-cv_file.write("K", mtx)
-cv_file.write("D", dist)
-cv_file.release()
+print("VIDEO FEED STOPPED")
+
+cv2.destroyAllWindows()
+vs.stop()
+
+# cv2.destroyAllWindows()
+# vs.stop()
