@@ -1,5 +1,4 @@
-from __future__ import print_function
-from __future__ import division
+from collections import deque
 from picamera import PiCamera
 from time import sleep
 from matplotlib import pyplot as plt
@@ -67,18 +66,27 @@ while True: #constant video frame read
         cv2.circle(frame, (int(x), int(y)), int(radius), (255,0,0), 2) #BOUNDING CIRCLE
         cv2.circle(frame, center, 5, (0,255,0),-1) #CENTER
         
-    pts.appendleft(center)
+        imagesize=radius*2
+        cv2.putText(frame, str(imagesize), (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+        
+        #calculate distance:
+        physicalz=(imagesize/473)**(1/(-1.07))
+        cv2.putText(frame, str(physicalz), (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+        
+        pts.appendleft(center) #THIS USED TO NOT BE INDENTED, CHECK IF IT'S STILL OK
+    
+    else:
+        cv2.putText(frame, "object not found", (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
     
     for i in range(1, len(pts)):
         if pts[i-1] is None or pts[i] is None:
             continue
-        thickness = int(np.sqrt(args["buffer"]/float(i+1))*2.5)
-        cv2.line(frame, pts[i-1],pts[i],(0,0,255), thickness)
+        #thickness = int(np.sqrt(args["buffer"]/float(i+1))*2.5)
+        cv2.line(frame, pts[i-1],pts[i],(0,0,255), 1)
     
     
     #Photo dimensions: (1920,1080); Center coords: 960,540
     #Video Feed dimensions: (320,240); Center coords: 160,120
-    imagesize=radius*2
     #CALCULATIONS!
 #     cx=160 #center x, photo: 960
 #     cy=120 #center y, photo: 540
@@ -96,8 +104,7 @@ while True: #constant video frame read
 
 #     sizetext=imagesize, " px wide"
 #     print(sizetext)
-    cv2.putText(frame, str(imagesize), (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-    cv2.putText(frame, str(physicalz), (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+    
 #     print("Image Size: ", str(imagesize), " Physical Distance (approx): ", str(physicalz))
           #, " (u,v): (", u, ",", v, ")", " Real (X,Y,Z): (", physicalx, ",", physicaly,",", physicalz, ")")
     #print("Center: (", str(x), ",",str(y),")")
