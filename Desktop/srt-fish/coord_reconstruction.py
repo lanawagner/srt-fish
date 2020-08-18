@@ -8,6 +8,7 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 from imutils.video import VideoStream
 from imutils.video import FPS
+from imutils.video import count_frames
 from imutils import paths
 from PIL import Image
 import numpy as np;
@@ -30,6 +31,10 @@ boundaries = [
 
 #TRACKED POINTS:
 pts=deque(maxlen=args["buffer"])
+
+#frame counter:
+framenumber=0
+
 
 # LOOP CODE
 while True: #constant video frame read
@@ -58,10 +63,10 @@ while True: #constant video frame read
         c=max(cnts, key=cv2.contourArea)
         ((x,y),radius)= cv2.minEnclosingCircle(c)
         M = cv2.moments(c)
-        if M==0: #to fix the divide by zero error?
+        if (M["m00"]==0): #to fix the divide by zero error?
             cv2.putText(frame, "ERROR, no center", (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-            break
-        center=(int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
+        else:
+            center=(int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
         
         #drawing here:
         cv2.circle(frame, (int(x), int(y)), int(radius), (255,0,0), 2) #BOUNDING CIRCLE (blue)
@@ -83,10 +88,28 @@ while True: #constant video frame read
         v=y-cy
         v=-v #because reference frame is top left
         
-        f=2714.285714 #focal length in px
+        f=252
+        #OLD: f=2714.285714 #focal length in px
         xcoord=(zcoord/f)*u
         ycoord=(zcoord/f)*v
         
+        if(framenumber<=2):
+            cv2.putText(frame, "not enough frames", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+        
+        else:
+            xlast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
+            ylast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
+            
+            framerate=float(fps.fps())
+            xvelocity=(xcoord-xlast)*(1/framerate)
+            yvelocity=(xcoord-ylast)*(1/framerate)
+            xvelocity='%.2f'%(xvelocity)
+            yvelocity='%.2f'%(yvelocity)
+            
+            v_x="V(x)= " + str(xvelocity) + "in/s"
+            v_y="V(y)= " + str(yvelocity) + "in/s"
+            cv2.putText(frame, str(v_x), (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+            cv2.putText(frame, str(v_y), (100,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
         #truncating floats:
         u='%.2f'%(u)
         v='%.2f'%(v)
@@ -125,10 +148,15 @@ while True: #constant video frame read
         print("esc key pressed")
         break
     
+    framenumber=framenumber+1
     fps.update()
 
 #Stream end protocol:
 print("VIDEO FEED STOPPED")
+fps.stop()
+
+# print('~ FPS : {:.2f}'.format(fps.fps()))
+# print(str(fps.fps()))
 
 cv2.destroyAllWindows()
 vs.stop()
