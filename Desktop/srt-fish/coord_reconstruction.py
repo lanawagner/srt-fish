@@ -93,14 +93,14 @@ while True: #constant video frame read
         xcoord=(zcoord/f)*u
         ycoord=(zcoord/f)*v
         
-        if(framenumber<=2):
+        if(framenumber<=5):
             cv2.putText(frame, "not enough frames", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
         
         else:
             xlast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
             ylast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
             
-            framerate=float(fps.fps())
+            framerate=fps.fps()
             xvelocity=(xcoord-xlast)*(1/framerate)
             yvelocity=(xcoord-ylast)*(1/framerate)
             xvelocity='%.2f'%(xvelocity)
@@ -156,6 +156,8 @@ print("VIDEO FEED STOPPED")
 fps.stop()
 
 # print('~ FPS : {:.2f}'.format(fps.fps()))
+testfps=float(fps.fps())
+print(testfps)
 # print(str(fps.fps()))
 
 cv2.destroyAllWindows()
