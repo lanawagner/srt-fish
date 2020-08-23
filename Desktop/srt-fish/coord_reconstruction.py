@@ -35,6 +35,9 @@ pts=deque(maxlen=args["buffer"])
 #frame counter:
 framenumber=0
 
+(dX, dY) = (0,0)
+direction = ""
+
 
 # LOOP CODE
 while True: #constant video frame read
@@ -93,23 +96,6 @@ while True: #constant video frame read
         xcoord=(zcoord/f)*u
         ycoord=(zcoord/f)*v
         
-        if(framenumber<=5):
-            cv2.putText(frame, "not enough frames", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
-        
-        else:
-            xlast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
-            ylast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
-            
-            framerate=fps.fps()
-            xvelocity=(xcoord-xlast)*(1/framerate)
-            yvelocity=(xcoord-ylast)*(1/framerate)
-            xvelocity='%.2f'%(xvelocity)
-            yvelocity='%.2f'%(yvelocity)
-            
-            v_x="V(x)= " + str(xvelocity) + "in/s"
-            v_y="V(y)= " + str(yvelocity) + "in/s"
-            cv2.putText(frame, str(v_x), (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
-            cv2.putText(frame, str(v_y), (100,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
         #truncating floats:
         u='%.2f'%(u)
         v='%.2f'%(v)
@@ -128,14 +114,54 @@ while True: #constant video frame read
         realcoords="(X,Y,Z): (" + str(xcoord) + "," + str(ycoord)  + "," + str(zcoord) + ")"
         cv2.putText(frame, str(realcoords), (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
         
-        pts.appendleft(center) #THIS USED TO NOT BE INDENTED, CHECK IF IT'S STILL OK
+        pts.appendleft(center)
+        
+        #IGNORE
+#         if(framenumber<=5):
+#             cv2.putText(frame, "not enough frames", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+#         
+#         else:
+#             xlast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
+#             ylast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
+#             
+#             framerate= 3 #fps.fps(), figure out how method works
+#             xvelocity=(float(xcoord)-xlast)*(1/framerate)
+#             yvelocity=(float(ycoord)-ylast)*(1/framerate)
+#             xvelocity='%.2f'%(xvelocity)
+#             yvelocity='%.2f'%(yvelocity)
+#             
+#             v_x="V(x)= " + str(xvelocity) + "in/s"
+#             v_y="V(y)= " + str(yvelocity) + "in/s"
+#             cv2.putText(frame, str(v_x), (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+#             cv2.putText(frame, str(v_y), (100,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
     
     else:
         cv2.putText(frame, "object not found", (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
     
-    for i in range(1, len(pts)):
+    #drawing tail and determining direction (and later velocity)
+    for i in np.arange(1, len(pts)):
         if pts[i-1] is None or pts[i] is None:
             continue
+        
+        if framenumber >= 10 and i == 1 and pts[-10] is not None:
+            dX = pts[-10][0]-pts[i][0]
+            dY = pts[-10][1]-pts[i][1]
+            (dirX, dirY) = ("", "")
+            
+            if np.abs(dX)>20:
+                dirX = "Right" if np.sign(dX)==1 else "Left"
+        
+            if np.abs(dY)>20:
+                dirY = "Up" if np.sign(dY)==1 else "Down"
+                
+            if dirX != "" and dirY != "":
+                direction = dirY + " and " + dirX
+                
+            else:
+                direction = dirX if dirX != "" else dirY
+        
+        #cv2.putText direction or whateva
+        cv2.putText(frame, direction, (10,80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
         #thickness = int(np.sqrt(args["buffer"]/float(i+1))*2.5)
         cv2.line(frame, pts[i-1],pts[i],(0,0,255), 1)
     
