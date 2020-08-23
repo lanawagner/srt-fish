@@ -16,7 +16,7 @@ import numpy as np;
 #camera video setup
 vs = VideoStream(usePiCamera=True).start()
 time.sleep(2.0)
-fps = FPS().start()
+# fps = FPS().start()
 print("STARTING VIDEO FEED")
 
 ap = argparse.ArgumentParser()
@@ -42,6 +42,7 @@ direction = ""
 # LOOP CODE
 while True: #constant video frame read
     frame = vs.read()
+    fps = FPS().start()
     
     #convert to HSV, set HSV boundaries
     hsv=cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -143,11 +144,14 @@ while True: #constant video frame read
         if pts[i-1] is None or pts[i] is None:
             continue
         
-        if framenumber >= 10 and i == 1 and pts[-10] is not None:
+        if framenumber >= 10 and i == 1 and len(pts) == args["buffer"]: #pts[i-10] is not None:
+            #determine direction
             dX = pts[-10][0]-pts[i][0]
+            print(pts[i][0])
             dY = pts[-10][1]-pts[i][1]
             (dirX, dirY) = ("", "")
-            
+    
+            #direction cases
             if np.abs(dX)>20:
                 dirX = "Right" if np.sign(dX)==1 else "Left"
         
@@ -159,10 +163,30 @@ while True: #constant video frame read
                 
             else:
                 direction = dirX if dirX != "" else dirY
+            
+           
+            #determine FPS
+            fps.update()
+            fps.stop()
+            framerate= fps.fps()
+            
+            #calculating velocities, cleaning up strings
+            xvelocity=(pts[i][0]-pts[-1][0])*(1/framerate)
+            yvelocity=(pts[i][1]-pts[-1][1])*(1/framerate)
+            xvelocity='%.2f'%(xvelocity)
+            yvelocity='%.2f'%(yvelocity)
+            
+            v_x="V(x)= " + str(xvelocity) + "in/s"
+            v_y="V(y)= " + str(yvelocity) + "in/s"
+            
+            #writing velocity
+            cv2.putText(frame, str(v_x), (0,100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+            cv2.putText(frame, str(v_y), (0,120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
         
-        #cv2.putText direction or whateva
-        cv2.putText(frame, direction, (10,80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
-        #thickness = int(np.sqrt(args["buffer"]/float(i+1))*2.5)
+            #writing direction
+            cv2.putText(frame, direction, (10,80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+        
+        #drawing trail
         cv2.line(frame, pts[i-1],pts[i],(0,0,255), 1)
     
     #displaying video feed:
@@ -175,15 +199,15 @@ while True: #constant video frame read
         break
     
     framenumber=framenumber+1
-    fps.update()
+#     fps.update()
 
 #Stream end protocol:
 print("VIDEO FEED STOPPED")
-fps.stop()
+# fps.stop()
 
 # print('~ FPS : {:.2f}'.format(fps.fps()))
-testfps=float(fps.fps())
-print(testfps)
+# testfps=float(fps.fps())
+# print(testfps)
 # print(str(fps.fps()))
 
 cv2.destroyAllWindows()
