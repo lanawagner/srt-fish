@@ -80,7 +80,6 @@ while True: #constant video frame read
         
         #calculate z distance:
         zcoord=(diameter/473)**(1/(-1.07))
-        physicalz= "Z: " + str(zcoord) + " in"
         #cv2.putText(frame, str(physicalz), (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
         
         #calculating u and v coordinates:
@@ -96,6 +95,11 @@ while True: #constant video frame read
         #OLD: f=2714.285714 #focal length in px
         xcoord=(zcoord/f)*u
         ycoord=(zcoord/f)*v
+        #convert to cm:
+        zcoord=zcoord*(2.54)
+        physicalz= "Z: " + str(zcoord) + " m"
+        xcoord=xcoord*2.54
+        ycoord=ycoord*2.54
         
         #truncating floats:
         u='%.2f'%(u)
@@ -117,25 +121,7 @@ while True: #constant video frame read
         
         pts.appendleft(center)
         
-        #IGNORE
-#         if(framenumber<=5):
-#             cv2.putText(frame, "not enough frames", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
-#         
-#         else:
-#             xlast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
-#             ylast = 1 #CHANGE IT TO ACTUAL X COORD OF LAST FRAME
-#             
-#             framerate= 3 #fps.fps(), figure out how method works
-#             xvelocity=(float(xcoord)-xlast)*(1/framerate)
-#             yvelocity=(float(ycoord)-ylast)*(1/framerate)
-#             xvelocity='%.2f'%(xvelocity)
-#             yvelocity='%.2f'%(yvelocity)
-#             
-#             v_x="V(x)= " + str(xvelocity) + "in/s"
-#             v_y="V(y)= " + str(yvelocity) + "in/s"
-#             cv2.putText(frame, str(v_x), (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
-#             cv2.putText(frame, str(v_y), (100,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
-    
+
     else:
         cv2.putText(frame, "object not found", (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
     
@@ -147,13 +133,12 @@ while True: #constant video frame read
         if framenumber >= 10 and i == 1 and len(pts) == args["buffer"]: #pts[i-10] is not None:
             #determine direction
             dX = pts[-10][0]-pts[i][0]
-            print(pts[i][0])
             dY = pts[-10][1]-pts[i][1]
             (dirX, dirY) = ("", "")
     
             #direction cases
             if np.abs(dX)>20:
-                dirX = "Right" if np.sign(dX)==1 else "Left"
+                dirX = "Left" if np.sign(dX)==1 else "Right"
         
             if np.abs(dY)>20:
                 dirY = "Up" if np.sign(dY)==1 else "Down"
@@ -171,13 +156,14 @@ while True: #constant video frame read
             framerate= fps.fps()
             
             #calculating velocities, cleaning up strings
+            #currently in px/s
             xvelocity=(pts[i][0]-pts[-1][0])*(1/framerate)
             yvelocity=(pts[i][1]-pts[-1][1])*(1/framerate)
             xvelocity='%.2f'%(xvelocity)
             yvelocity='%.2f'%(yvelocity)
             
-            v_x="V(x)= " + str(xvelocity) + "in/s"
-            v_y="V(y)= " + str(yvelocity) + "in/s"
+            v_x="V(x)= " + str(xvelocity) + "px/s"
+            v_y="V(y)= " + str(yvelocity) + "px/s"
             
             #writing velocity
             cv2.putText(frame, str(v_x), (0,100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
@@ -199,16 +185,9 @@ while True: #constant video frame read
         break
     
     framenumber=framenumber+1
-#     fps.update()
 
 #Stream end protocol:
 print("VIDEO FEED STOPPED")
-# fps.stop()
-
-# print('~ FPS : {:.2f}'.format(fps.fps()))
-# testfps=float(fps.fps())
-# print(testfps)
-# print(str(fps.fps()))
 
 cv2.destroyAllWindows()
 vs.stop()
