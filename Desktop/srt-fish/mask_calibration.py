@@ -18,6 +18,7 @@ print("STARTING VIDEO FEED")
 #convert to HSV, set HSV boundaries
 boundaries = [
     ([7,120,120], [153,255,255]) #CHANGE THE MASK VALUES FOR CALIBRATION HERE
+    #currently set to filter out neon orange color 
 ]
 
 while True:
@@ -65,27 +66,3 @@ print("VIDEO FEED STOPPED")
 
 cv2.destroyAllWindows()
 vs.stop()
-
-
-#         cv2.waitKey(0)
-#         
-#     #finding contours
-#     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#     cnts = imutils.grab_contours(cnts)
-#     center = None
-# 
-#     #largest contour, drawing bounding circle
-#     if len(cnts) > 0:
-#         c=max(cnts, key=cv2.contourArea)
-#         ((x,y),radius)= cv2.minEnclosingCircle(c)
-#         M = cv2.moments(c)
-#         center=(int(M["m10"]/M["m00"]),int(M["m01"]/M["m00"]))
-#         cv2.circle(im, (int(x), int(y)), int(radius), (0,255,0), 2) #BOUNDING CIRCLE
-#         cv2.circle(im, center, 5, (255,0,0),-1) #CENTER
-# 
-# #prints and display
-# diameter=radius*2
-# print("Diameter: ", str(diameter))
-# print("Center: (", str(x), ",",str(y),")")
-# cv2.imshow("Image", im)
-# cv2.waitKey(0)
