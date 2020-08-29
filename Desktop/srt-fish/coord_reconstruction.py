@@ -135,42 +135,72 @@ while True: #constant video frame read
             dX = pts[-10][0]-pts[i][0]
             dY = pts[-10][1]-pts[i][1]
             (dirX, dirY) = ("", "")
+            far=""
+            swimspeed=""
+            
+            #determine FPS
+            fps.update()
+            fps.stop()
+            framerate= fps.fps()
+            
+            d=radius*2
+            zdist=(d/473)**(1/(-1.07))
+            
+            #buffer to get rid of small movements (only big changes in position)
+            if np.abs(dX)>=15:
+                #calculating velocities, cleaning up strings
+                #currently in px/s
+                xvelocity=(pts[i][0]-pts[-1][0])*framerate
+                xvelocity=xvelocity*(zdist/f)
+                xvelocity=xvelocity*.0254
+                
+                xvelocity='%.2f'%(xvelocity)
+                v_x="V(x)= " + str(xvelocity) + "m/s"
+                cv2.putText(frame, str(v_x), (0,100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+                
+            if np.abs(dY)>=15:
+                yvelocity=(pts[i][1]-pts[-1][1])*framerate
+                yvelocity=yvelocity*(zdist/f)
+                yvelocity=yvelocity*.0254
+                
+                yvelocity='%.2f'%(yvelocity)
+                v_y="V(y)= " + str(yvelocity) + "m/s"
+                cv2.putText(frame, str(v_y), (0,120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
     
-            #direction cases
-            if np.abs(dX)>20:
-                dirX = "Left" if np.sign(dX)==1 else "Right"
-        
-            if np.abs(dY)>20:
-                dirY = "Up" if np.sign(dY)==1 else "Down"
+            #object location cases
+                #FIGURE OUT WHY ALWAYS UP AND RIGHT
+            if pts[i][0]-cx>0:
+                dirX= "right"
+            else:
+                dirX="left"
+                
+            if pts[i][1]-cy>0:
+                dirY= "down"
+            else:
+                dirY= "up"
+                    
+            if 0<=zdist<=12:
+                far="close"
+                swimspeed="slow"
+            
+            elif 12<zdist<=36:
+                far="medium"
+                swimspeed="medium"
+            
+            else:
+                far="far away"
+                swimspeed="fast"
                 
             if dirX != "" and dirY != "":
                 direction = dirY + " and " + dirX
                 
             else:
                 direction = dirX if dirX != "" else dirY
-            
-           
-            #determine FPS
-            fps.update()
-            fps.stop()
-            framerate= fps.fps()
-            
-            #calculating velocities, cleaning up strings
-            #currently in px/s
-            xvelocity=(pts[i][0]-pts[-1][0])*(1/framerate)
-            yvelocity=(pts[i][1]-pts[-1][1])*(1/framerate)
-            xvelocity='%.2f'%(xvelocity)
-            yvelocity='%.2f'%(yvelocity)
-            
-            v_x="V(x)= " + str(xvelocity) + "px/s"
-            v_y="V(y)= " + str(yvelocity) + "px/s"
-            
-            #writing velocity
-            cv2.putText(frame, str(v_x), (0,100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
-            cv2.putText(frame, str(v_y), (0,120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+                
+            swiminstructions="object: " + far + ", swim " + direction + " at " + swimspeed + " speed"
         
             #writing direction
-            cv2.putText(frame, direction, (10,80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+            cv2.putText(frame, swiminstructions, (10,80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
         
         #drawing trail
         cv2.line(frame, pts[i-1],pts[i],(0,0,255), 1)
