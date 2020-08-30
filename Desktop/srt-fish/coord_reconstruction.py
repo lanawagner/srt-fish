@@ -109,12 +109,9 @@ while True: #constant video frame read
         zcoord='%.2f'%(zcoord)
         diameter='%.2f'%(diameter)
         
-        imagesize=str(diameter) + " px wide"
-        cv2.putText(frame, str(imagesize), (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
-        
         uvcoord="(u,v): (" + str(u) + "," + str(v) + ")"
         cv2.circle(frame, (int(cx), int(cy)), 5, (0,0,255),-1) #drawing the image center point
-        cv2.putText(frame, str(uvcoord), (10,60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,25))
+        cv2.putText(frame, str(uvcoord), (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,25))
         
         realcoords="(X,Y,Z): (" + str(xcoord) + "," + str(ycoord)  + "," + str(zcoord) + ")"
         cv2.putText(frame, str(realcoords), (10,40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
@@ -132,8 +129,8 @@ while True: #constant video frame read
         
         if framenumber >= 10 and i == 1 and len(pts) == args["buffer"]: #pts[i-10] is not None:
             #determine direction
-            dX = pts[-10][0]-pts[i][0]
-            dY = pts[-10][1]-pts[i][1]
+            dX = pts[i][0]-pts[i-1][0]
+            dY = pts[i][1]-pts[i-1][1]
             (dirX, dirY) = ("", "")
             far=""
             swimspeed=""
@@ -147,7 +144,7 @@ while True: #constant video frame read
             zdist=(d/473)**(1/(-1.07))
             
             #buffer to get rid of small movements (only big changes in position)
-            if np.abs(dX)>=15:
+            if np.abs(dX)>=10:
                 #calculating velocities, cleaning up strings
                 #currently in px/s
                 xvelocity=(pts[i][0]-pts[-1][0])*framerate
@@ -156,16 +153,16 @@ while True: #constant video frame read
                 
                 xvelocity='%.2f'%(xvelocity)
                 v_x="V(x)= " + str(xvelocity) + "m/s"
-                cv2.putText(frame, str(v_x), (0,100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+                cv2.putText(frame, str(v_x), (0,80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
                 
-            if np.abs(dY)>=15:
+            if np.abs(dY)>=10:
                 yvelocity=(pts[i][1]-pts[-1][1])*framerate
                 yvelocity=yvelocity*(zdist/f)
                 yvelocity=yvelocity*.0254
                 
                 yvelocity='%.2f'%(yvelocity)
                 v_y="V(y)= " + str(yvelocity) + "m/s"
-                cv2.putText(frame, str(v_y), (0,120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
+                cv2.putText(frame, str(v_y), (0,100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
     
             #object location cases
                 #FIGURE OUT WHY ALWAYS UP AND RIGHT
@@ -200,7 +197,7 @@ while True: #constant video frame read
             swiminstructions="object: " + far + ", swim " + direction + " at " + swimspeed + " speed"
         
             #writing direction
-            cv2.putText(frame, swiminstructions, (10,80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+            cv2.putText(frame, swiminstructions, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
         
         #drawing trail
         cv2.line(frame, pts[i-1],pts[i],(0,0,255), 1)
