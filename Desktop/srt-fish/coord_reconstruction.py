@@ -122,8 +122,15 @@ while True: #constant video frame read
     else:
         cv2.putText(frame, "object not found", (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
     
+    sumposx=0
+    sumposy=0
     #drawing tail and determining direction (and later velocity)
     for i in np.arange(1, len(pts)):
+        #TEST: smoothing function
+        sumposx=sumposx+pts[i][0]
+        sumposy=sumposy+pts[i][1]
+        
+        
         if pts[i-1] is None or pts[i] is None:
             continue
         
@@ -198,6 +205,13 @@ while True: #constant video frame read
         
             #writing direction
             cv2.putText(frame, swiminstructions, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+        
+        #calculating smoothed position??????
+        smoothposx=sumposx/(len(pts))
+        smoothposy=sumposy/(len(pts))
+        smoothcoords= "smoothed: (" + str(sumposx) + "," + str(sumposy) + ")"
+        cv2.putText(frame, smoothcoords, (10,120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+        
         
         #drawing trail
         cv2.line(frame, pts[i-1],pts[i],(0,0,255), 1)
