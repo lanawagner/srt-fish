@@ -122,13 +122,13 @@ while True: #constant video frame read
     else:
         cv2.putText(frame, "object not found", (10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
     
-    sumposx=0
-    sumposy=0
+#     sumposx=0
+#     sumposy=0
     #drawing tail and determining direction (and later velocity)
     for i in np.arange(1, len(pts)):
-        #TEST: smoothing function
-        sumposx=sumposx+pts[i][0]
-        sumposy=sumposy+pts[i][1]
+#         #TEST: smoothing function
+#         sumposx=sumposx+pts[i][0]
+#         sumposy=sumposy+pts[i][1]
         
         
         if pts[i-1] is None or pts[i] is None:
@@ -154,7 +154,7 @@ while True: #constant video frame read
             if np.abs(dX)>=10:
                 #calculating velocities, cleaning up strings
                 #currently in px/s
-                xvelocity=(pts[i][0]-pts[-1][0])*framerate
+                xvelocity=(pts[i][0]-pts[i-1][0])*framerate
                 xvelocity=xvelocity*(zdist/f)
                 xvelocity=xvelocity*.0254
                 
@@ -163,7 +163,7 @@ while True: #constant video frame read
                 cv2.putText(frame, str(v_x), (0,80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
                 
             if np.abs(dY)>=10:
-                yvelocity=(pts[i][1]-pts[-1][1])*framerate
+                yvelocity=(pts[i][1]-pts[i-1][1])*framerate
                 yvelocity=yvelocity*(zdist/f)
                 yvelocity=yvelocity*.0254
                 
@@ -206,11 +206,11 @@ while True: #constant video frame read
             #writing direction
             cv2.putText(frame, swiminstructions, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
         
-        #calculating smoothed position??????
-        smoothposx=sumposx/(len(pts))
-        smoothposy=sumposy/(len(pts))
-        smoothcoords= "smoothed: (" + str(sumposx) + "," + str(sumposy) + ")"
-        cv2.putText(frame, smoothcoords, (10,120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
+#         #calculating smoothed position??????
+#         smoothposx=sumposx/(len(pts))
+#         smoothposy=sumposy/(len(pts))
+#         smoothcoords= "smoothed: (" + str(sumposx) + "," + str(sumposy) + ")"
+#         cv2.putText(frame, smoothcoords, (10,120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0))
         
         
         #drawing trail
